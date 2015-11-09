@@ -59,14 +59,43 @@
 
 	// checkHTTPStatus - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
 
-	ToolBoxKit.prototype.checkHTTPStatus = function (http_status, url) {
-		switch(http_status){
-			case 404:
-				throw new AjaxComponentException('Could not get ressource : response code 404 with ' + url);
-				// throw new AjaxComponentException('Could not get ressource : response code 404');
+	ToolBoxKit.prototype.checkHTTPStatus = function (response_object) {
+		var response_code_prefix = response_object.status.toString().substring(0, 1);
+		if(response_code_prefix == '4' || response_code_prefix == '5'){
+			// example : 404 or 500
+			throw new AjaxComponentException('Could not get ressource : ' + response_object.status + ' ' + response_object.statusText + ' | url : ' + response_object.responseURL);
+		}
+	};
+
+
+	// checkContentType - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
+
+	ToolBoxKit.prototype.checkContentType = function (response_object, check_mode) {
+
+		var allowed_media_content_types	= ['image/jpeg', 'video/mp4', 'application/x-shockwave-flash'];
+		
+		switch(check_mode){
+			
+			case 'media' :
+				var content_type = response_object.getResponseHeader('content-type');
+				if(allowed_media_content_types.indexOf(content_type) == -1){
+					throw new AjaxComponentException('File type ' + content_type + ' is not allowed');
+				}
+				return content_type;
 				break;
+
+			// TODO : checkContentType for xml, plain-text and json
+			case 'data' :
+
+				break;
+
 		}
 
+		/*var response_code_prefix = response_object.status.toString().substring(0, 1);
+		if(response_code_prefix == '4' || response_code_prefix == '5'){
+			// example : 404 or 500
+			throw new AjaxComponentException('Could not get ressource : ' + response_object.status + ' ' + response_object.statusText + ' | url : ' + response_object.responseURL);
+		}*/
 	};
 
 
@@ -80,7 +109,7 @@
 
 		var params_array 					= [];
 
-		var allowed_methods_array 			= ['GET', 'POST', 'HEAD', 'PUT'];
+		var allowed_methods_array 			= ['GET', 'POST', 'HEAD', 'OPTIONS'];
 
 		var allowed_response_type_array 	= ['', 'arraybuffer', 'blob', 'document', 'json', 'text'];
 
@@ -131,9 +160,13 @@
 
 		AjaxParameters.async		= AjaxObject.async;
 
-		AjaxParameters.responseType		= AjaxObject.responseType;
+		AjaxParameters.responseType	= AjaxObject.responseType;
 
-		AjaxParameters.url 			= (AjaxObject.method == 'GET') ? AjaxObject.url + '?' + params_array.join('&') : AjaxObject.url ;
+		if(params_array.length > 0){
+			AjaxParameters.url 		= (AjaxObject.method == 'GET') ? AjaxObject.url + '?' + params_array.join('&') : AjaxObject.url ;
+		}else{
+			AjaxParameters.url 		= AjaxObject.url;
+		}
 
 		AjaxParameters.method 		= AjaxObject.method ;
 
@@ -157,8 +190,6 @@
 
 			var self 		= this;
 
-			var Window 		= window;
-
 			if (window.XMLHttpRequest) {
 
 				try{
@@ -179,16 +210,31 @@
 
 						if (this.readyState == this.DONE) {
 
-							var response_object = {
+							/*var response_object = {
 								status			: this.status,
 								content_type	: this.getResponseHeader('content-type')
-							};
+							};*/
 
-							return CallBack(response_object);
+							var response_object = this;
+
+							if (self.getType(CallBack) == 'Function') {
+								return CallBack(response_object);	
+							}else{
+								try{
+									self.checkHTTPStatus(response_object);
+									return response_object.response;
+								}catch(err){
+									logger.logError(err.name, err.message);
+								}								
+							}
+
+
+
+							
 							
 							/*if(this.status == 200){
 								var response_object = {
-									content_type	: this.getResponseHeader('content-type')
+									content_type	: this.getResponseHeader('content-type');
 								};
 
 								return CallBack(response_object);
@@ -218,6 +264,14 @@
 								// var blob 			= new Blob([xhr.response], {type: "image/jpeg"});
 								// var objectURL 		= URL.createObjectURL(blob);
 								// theImage.src 		= objectURL;
+
+								// 
+								var response_object = this;
+
+								if (self.getType(CallBack) == 'Function') {
+									return CallBack(response_object);	
+								}
+								
 								break;							
 
 						}
@@ -279,35 +333,66 @@
 
 			// async, url, method, parameters, responseType
 
-			var self 	= this;
+			var self 					= this;
 
-			var logger 		= this.logger;
+			var logger 					= this.logger;
 
-			// console.log(this.getType(AjaxComponentException));
+			var target 					= document.getElementById(fetchObject.target);
 
-			var AjaxObject = {
+			var HeadAjaxObject = {
 				async			: true ,
 				url				: fetchObject.file ,
-				method			: 'HEAD' ,
+				method			: 'GET' ,
 				responseType	: 'arraybuffer'
 			};
 
-			
+			this.makeAjax(HeadAjaxObject, function (response_object) {
 
-				this.makeAjax(AjaxObject, function (response_object) {
-					// console.log(self.getType(AjaxComponentException));
-					console.log(response_object);
-					try{
-						self.checkHTTPStatus(response_object.status, AjaxObject.url);
-					}catch(err){
-						logger.logError(err.name, err.message);
-					}
+				try{
 
-					// if (response_object.status !== 200) {throw new AjaxComponentException('Could not get ressource : response code is ' + response_object.status.toString())}
-				});
+					self.checkHTTPStatus(response_object);
 
-			
-			
+					var content_type 	=  self.checkContentType(response_object, 'media');
+
+					var blob 			= new Blob([response_object.response], { type : content_type });	
+
+					var objectURL 		= URL.createObjectURL(blob);
+
+					var child 			= document.createElement('IMG');
+
+					child.src 			= objectURL;
+
+					target.appendChild(child);
+
+				}catch(err){
+
+					logger.logError(err.name, err.message);
+				
+				}
+
+			});
+
+			/*
+
+			var GetAjaxObject = {
+				async			: true ,
+				url				: HeadAjaxObject.url ,
+				method			: 'GET' ,
+				responseType	: 'arraybuffer'
+			}
+
+			this.makeAjax(GetAjaxObject, function (response_object) {
+
+				// var theImage 		= document.querySelector('img');
+				// var blob 			= new Blob([xhr.response], {type: "image/jpeg"});
+				// var objectURL 		= URL.createObjectURL(blob);
+				// theImage.src 		= objectURL;
+
+				// console.log(target);
+
+				console.log('Trace this');
+
+			});*/		
 			
 
 			/*AjaxObject = {

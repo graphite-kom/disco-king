@@ -50,9 +50,10 @@
 
 			/*new ToolBoxKit().makeAjax({
 				async			: true,
-				url 			: 'http://www.bimediatv.com/screen/core/xmlspit/disco-king/ajax-processing.php',
-				method 			: 'GET',
-				responseType	: 'arraybuffer',
+				// url 			: 'http://www.bimediatv.com/screen/core/xmlspit/disco-king/ajax-processing.php?file=elvis.jpg',
+				url 			: 'http://git-player.bmtv/test-medias/ajax-processing.php?file=elvis.jpg',
+				method 			: 'HEAD',
+				responseType	: '',
 				parameters 	: {
 					type			: 'video/mp4',
 					name 			: 'ANIM_RFM_MUSIC_LIVE_MONTPELv3.mp4',
@@ -75,7 +76,7 @@
 			// var parameters.file	= fetchObject.file ;
 
 			new ToolBoxKit().fetchFile({
-				file 	: 'http://www.bimediatv.com/screen/core/xmlspit/disco-king/ajax-processing.php?file=elvis-2.jpg',
+				file 	: 'http://www.bimediatv.com/screen/core/xmlspit/disco-king/ajax-processing.php?file=elvis.jpg',
 				target	: 'divTarget'
 			});
 
