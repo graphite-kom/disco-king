@@ -56,15 +56,35 @@
 		return '';
 	};
 
+	// getMediaName - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
+
+	ToolBoxKit.prototype.getMediaName = function (media_url) {
+		var media_url_parts 	= media_url.split('/');
+		var file_name			= media_url_parts[media_url_parts.length - 1];		
+		if(file_name.indexOf('?') > -1){
+			file_name 			= file_name.split('file=');
+			file_name 			= file_name[file_name.length - 1];
+		}
+		var media_name_parts 	= file_name.split('.');
+		var media_name 			= media_name_parts[0];
+		return media_name;
+	};
 
 	// checkHTTPStatus - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
 
-	ToolBoxKit.prototype.checkHTTPStatus = function (response_object) {
+	ToolBoxKit.prototype.checkHTTPStatus = function (response_object, url) {
+
 		var response_code_prefix = response_object.status.toString().substring(0, 1);
-		if(response_code_prefix == '4' || response_code_prefix == '5'){
-			// example : 404 or 500
-			throw new AjaxComponentException('Could not get ressource : ' + response_object.status + ' ' + response_object.statusText + ' | url : ' + response_object.responseURL);
+		
+		// example : 404 or 500
+		if(response_code_prefix == '4' || response_code_prefix == '5'  || response_code_prefix == '0'){
+
+			var log_url = (response_object.responseURL.length > 0) ? response_object.responseURL : url ;
+
+			throw new AjaxComponentException('Could not get ressource | status : ' + response_object.status + ' ' + response_object.statusText + ' | url : ' + log_url);
+
 		}
+
 	};
 
 
@@ -117,9 +137,9 @@
 
 		if(this.getType(AjaxObject) !== 'Object') throw new AjaxComponentException('Ajax Object is not in a well formed literal Object');
 
-		if(this.getType(AjaxObject.async) !== 'Boolean') throw new AjaxComponentException('URL is not in a well formed literal String Object');
+		if(this.getType(AjaxObject.async) !== 'Boolean') throw new AjaxComponentException('Async is not in a Boolean');
 
-		if(this.getType(AjaxObject.url) !== 'String') throw new AjaxComponentException('URL is not in a well formed literal String Object');
+		if(this.getType(AjaxObject.url) !== 'String') throw new AjaxComponentException('URL ' + AjaxObject.url + ' is not in a well formed literal String Object');
 
 		if(this.getType(AjaxObject.method) !== 'String' || allowed_methods_array.indexOf(AjaxObject.method) == -1) throw new AjaxComponentException('Method is incorrect');
 
@@ -217,33 +237,27 @@
 
 							var response_object = this;
 
-							if (self.getType(CallBack) == 'Function') {
-								return CallBack(response_object);	
-							}else{
-								try{
-									self.checkHTTPStatus(response_object);
-									return response_object.response;
-								}catch(err){
-									logger.logError(err.name, err.message);
-								}								
+							try{
+
+								self.checkHTTPStatus(response_object, AjaxParameters.url);
+
+								if (self.getType(CallBack) == 'Function') {
+									return CallBack(response_object);	
+								}else{
+									return response_object.response;								
+								}
+
+							}catch(err){
+
+								logger.logError(err.name, err.message);
+								
+								if (self.getType(CallBack) == 'Function') {
+									return CallBack(false);	
+								}else{
+									return false;								
+								}
+							
 							}
-
-
-
-							
-							
-							/*if(this.status == 200){
-								var response_object = {
-									content_type	: this.getResponseHeader('content-type');
-								};
-
-								return CallBack(response_object);
-
-							}else{
-								console.log(self.getType(this.status));
-								// throw new AjaxComponentException('responseType is incorrect');
-								// throw new AjaxComponentException('Could not get ressource : response code is ' + this.status);
-							}	*/					
 
 						}
 						
@@ -329,7 +343,7 @@
 
 		// fetchFile - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
 
-		ToolBoxKit.prototype.fetchFile = function (fetchObject) {
+		ToolBoxKit.prototype.fetchFile = function (fetchObject, CallBack) {
 
 			// async, url, method, parameters, responseType
 
@@ -337,38 +351,38 @@
 
 			var logger 					= this.logger;
 
-			var target 					= document.getElementById(fetchObject.target);
+			//
 
-			var HeadAjaxObject = {
+			var GetAjaxObject = {
 				async			: true ,
-				url				: fetchObject.file ,
+				url				: fetchObject.file.url ,
 				method			: 'GET' ,
 				responseType	: 'arraybuffer'
 			};
 
-			this.makeAjax(HeadAjaxObject, function (response_object) {
+			this.makeAjax(GetAjaxObject, function (response_object) {
 
-				try{
+				if(!!response_object) {
 
-					self.checkHTTPStatus(response_object);
+					var content_type 				=  self.checkContentType(response_object, 'media');
 
-					var content_type 	=  self.checkContentType(response_object, 'media');
+					var blob 						= new Blob([response_object.response], { type : content_type });	
 
-					var blob 			= new Blob([response_object.response], { type : content_type });	
+					var objectURL 					= URL.createObjectURL(blob);
 
-					var objectURL 		= URL.createObjectURL(blob);
+					// 
 
-					var child 			= document.createElement('IMG');
+					fetchObject.file.content_type 	= content_type;
 
-					child.src 			= objectURL;
+					fetchObject.file.objectURL 		= objectURL;
 
-					target.appendChild(child);
+				}else{
 
-				}catch(err){
+					fetchObject.file				= false;
 
-					logger.logError(err.name, err.message);
-				
 				}
+
+				return CallBack(fetchObject.file);	
 
 			});
 

@@ -5,23 +5,35 @@
 <boucle>
 	<!-- <pub init="2" id="525" log_diffusion="false" reseau="bimediaExclusif">http://services.bimedia-it.com/boucles-pubs-jingles/jingle_culture_court_AS3.swf</pub> -->
 	
-	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5" mime_type="image/jpeg">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
+	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
 	
 	<!-- <pub init="2" id="538" log_diffusion="false" reseau="bimediaExclusif">http://services.bimedia-it.com/boucles-pubs-jingles/jingle_court_AS3.swf</pub> -->
 
-	<pub init="2" id="538" log_diffusion="true" reseau="bimediaExclusif" duration="5" mime_type="image/jpeg">http://10.10.2.13/Disco-King/disco-king/media/jtiCamelDouble1015_light.jpg</pub>
+	<pub init="2" id="538" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/jtiCamelDouble1015_light.jpg</pub>
+
+	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
 
 	<!-- <pub init="2" id="540" log_diffusion="false" reseau="bimediaExclusif">http://services.bimedia-it.com/boucles-pubs-jingles/jingle_court_AS3.swf</pub> -->
 
-	<pub init="2" id="540" log_diffusion="true" reseau="bimediaExclusif" duration="5" mime_type="image/jpeg">http://10.10.2.13/Disco-King/disco-king/media/jtiWinstonAuthentic1015_light_2.jpg</pub>
+	<pub init="2" id="540" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/jtiWinstonAuthentic1015_light_2.jpg</pub>
+
+	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
 
 	<!-- <pub init="2" id="539" log_diffusion="false" reseau="bimediaExclusif">http://services.bimedia-it.com/boucles-pubs-jingles/jingle_court_AS3.swf</pub> -->
 
-	<pub init="2" id="539" log_diffusion="true" reseau="bimediaExclusif" duration="5" mime_type="image/jpeg">http://10.10.2.13/Disco-King/disco-king/media/jtiWinstonFamily_light_2.jpg</pub>
+	<pub init="2" id="539" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/jtiWinstonFamily_light_2.jpg</pub>
+
+	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
+	
+	<pub init="2" id="539" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://www.bimediatv.com/screen/core/xmlspit/disco-king/ajax-processing.php?file=elvis.jpg</pub>
+
+	<pub init="2" id="525" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://10.10.2.13/Disco-King/disco-king/media/itfFortuna1015_light.jpg</pub>
+	
+	<pub init="2" id="539" log_diffusion="true" reseau="bimediaExclusif" duration="5">http://www.bimediatv.com/screen/core/xmlspit/API-Component-Dev/beach_sun_nature-HD.jpg</pub>
 
 	<!-- <pub init="2" id="1000" log_diffusion="true" reseau="bimediaExclusif" duration="10" mime_type="video/mp4">http://git-player.bmtv/test-medias/club-med.mp4</pub> --> 
 
-	<pub init="2" id="1000" log_diffusion="true" reseau="bimediaExclusif" duration="10" mime_type="video/mp4">http://www.bimediatv.com/screen/core/xmlspit/API-Component-Dev/ANIM_RFM_MUSIC_LIVE_MONTPELv3.mp4</pub>
+	<!-- <pub init="2" id="1000" log_diffusion="true" reseau="bimediaExclusif" duration="10" mime_type="video/mp4">http://www.bimediatv.com/screen/core/xmlspit/API-Component-Dev/ANIM_RFM_MUSIC_LIVE_MONTPELv3.mp4</pub> --> 
 	
 	<!-- <pub init="2" id="109" log_diffusion="false" reseau="bimediaExclusif">http://www.bimediatv.com/screen/bimediaScreen/pub/low/devAS3/debitantAS3jan2014.swf?nimtmp=8888888</pub> -->
 	<!-- <pub init="2" id="109" log_diffusion="false" reseau="bimediaExclusif">http://www.bimediatv.com/screen/bimediaScreen/pub/low/devAS3/jingleV1_teaser_debut_AS3.swf</pub> -->
