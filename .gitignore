@@ -1,0 +1,6 @@
+*.rst
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+._*
+.tmp_index.html*
