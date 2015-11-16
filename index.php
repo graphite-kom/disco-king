@@ -34,8 +34,8 @@
 		</template>
 
 		<template id="video">
-			<div class="media_element">
-				<video class="media_element">
+			<div>
+				<video>
 					<source type="video/mp4" preload="auto">
 				</video>
 			</div>

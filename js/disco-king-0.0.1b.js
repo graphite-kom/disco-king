@@ -346,29 +346,311 @@
 	// Start 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////	
 
-	var DiscoKingPlayer = function (PlayList) {
+	var DiscoKingPlayer = function (DiscoKingPlayerParams) {
 
-		this.PlayList = PlayList;
+		this.DiscoKingPlayerParams 	= DiscoKingPlayerParams;
 
-		/*this.PlayList = {
-			pubs 				: [],
-			addToPlaylist		: function (pub_object) {
-				if(!!pub_object){
-					this.pubs.push(pub_object);
-				}				
-			},
-			listPlaylist		: function () {
-				return this.pubs;
-			},
-			countPlaylist		: function () {
-				return this.pubs.length;
-			},
-			toTarget			: function () {
+		this.pubs 						= [];
 
+		this.playListIndex 				= 0;
+
+		// 
+
+		this.reSize	= DiscoKingPlayerParams.reSize;
+		this.target = document.querySelector(DiscoKingPlayerParams.target);
+		this.target.style.position	= 'relative';
+
+		if(!!this.reSize){
+			if(DiscoKingPlayerParams.target == 'body'){
+				// if(typeof window.innerWidth != 'undefined'){
+				// Determin what resolution height is for Most Browsers
+				// the more standards compliant browsers (mozilla/netscape/opera/IE7) use window.innerWidth and window.innerHeight
+				this.playerHeight = window.innerHeight;
+				this.playerWidth = (this.playerHeight*DiscoKingPlayerParams.target_height)/DiscoKingPlayerParams.target_width;
+				// }
+			}else{
+				// TODO : Action to take place if reSize in enable and target is a div element
 			}
-		};*/
+		}else{
+			// TODO : Action to take place if reSize in disabled and target is a body or a div element
+		}
 
 	};
+
+	DiscoKingPlayer.prototype.listPlaylist = function () {
+		return this.pubs;
+	};
+
+	DiscoKingPlayer.prototype.countPlaylist = function () {
+		return this.pubs.length;
+	};
+
+	// 
+
+	DiscoKingPlayer.prototype.toTarget = function (PlayListItem, template_type) {
+
+		var self = this;
+
+		return new Promise(function (resolve, reject) {
+			
+			var SetUpObject = {
+				template				: function () {
+					return document.querySelector('#' + template_type);
+				},
+				container				: function () {
+					return this.template().content.querySelector('div');
+				},
+				media 					: function () {
+					return this.template().content.querySelector(template_type);
+				}
+			};
+
+			resolve(SetUpObject);
+
+		}).then(function (SetUpObject) {
+
+			var FixedObject = {
+				media 					: SetUpObject.media(),
+				container 				: SetUpObject.container(),
+				template 				: SetUpObject.template(),
+				objectURL 				: PlayListItem.objectURL,
+				stage_name 				: PlayListItem.stage_name
+			};
+
+			return FixedObject;
+
+		}).then(function (FixedObject) {
+
+			FixedObject.media.src 					= FixedObject.objectURL;
+			FixedObject.media.style.height 			= self.playerHeight + 'px';
+			FixedObject.media.style.width 			= self.playerWidth + 'px';
+			FixedObject.container.style.height 		= self.playerHeight + 'px';
+			FixedObject.container.style.width 		= self.playerWidth + 'px';
+			FixedObject.container.style.position 	= 'absolute';
+			FixedObject.container.style.margin 		= 'inherit';
+			FixedObject.container.style.left 		= '-4000px';
+			FixedObject.container.setAttribute('id', FixedObject.stage_name);
+
+			// PlayListItem.media 						= FixedObject.media;
+
+			var clone = document.importNode(FixedObject.template.content, true);
+
+			self.target.appendChild(clone);
+
+			PlayListItem.DomElement					= document.querySelector('#' + FixedObject.stage_name);
+
+			return PlayListItem;
+
+		}).then(function (PlayListItem) {			
+
+			PlayListItem.setOnStage		= function () {
+				this.DomElement.style.margin 	= 'auto';
+				this.DomElement.style.position 	= 'static';
+			};
+
+			PlayListItem.setOffStage		= function () {
+				this.DomElement.style.margin 	= 'inherit';
+				this.DomElement.style.position 	= 'absolute';
+			};
+
+			PlayListItem.play 			= function () {
+
+				self.playListIndex++;
+
+				PlayListItemObject = this;
+
+				this.setOnStage();
+
+				switch(PlayListItem.content_type) {
+
+					case 'image/jpeg':
+						setTimeout(function(){
+							PlayListItemObject.setOffStage();
+							self.playNext();									
+						},parseInt(PlayListItemObject.duration) * 1000);
+						break;
+
+					case 'video/mp4' :
+						// logInspect(PlayListItemObject.media);
+						// PlayListItemObject.media.play();
+						video = PlayListItem.DomElement.querySelector('video');
+						video.play();
+						video.onended = function (evt) {
+							PlayListItemObject.setOffStage();
+							self.playNext();
+						};
+						break;
+
+				}
+
+			};
+
+			return PlayListItem;
+
+		}).then(function (PlayListItem) {
+			
+			self.pubs.push(PlayListItem);
+
+			return PlayListItem;
+
+		})/*.then(function () {
+			
+			logInspect('// + - + - + - + - + - + - + - + - + - + - + - + - ');
+
+			logInspect(PlayListItem);
+
+		})*/;
+	
+	};
+
+	// 
+
+	DiscoKingPlayer.prototype.addToPlaylist = function (PlayListItem) {
+
+		var self = this;
+
+		var template_type;
+
+		switch(PlayListItem.content_type) {
+
+			case 'image/jpeg':
+				template_type = 'img';
+				break;
+
+			case 'video/mp4' :
+				template_type = 'video';
+				break;
+
+		}
+
+		this.toTarget(PlayListItem, template_type);
+
+		// switch(PlayListItem.content_type){
+
+		// 	case 'image/jpeg':
+
+		// 		return new Promise(function (resolve, reject) {
+					
+		// 			var SetUpObject = {
+		// 				template				: function () {
+		// 					return document.querySelector('#img');
+		// 				},
+		// 				container				: function () {
+		// 					return this.template().content.querySelector('div');
+		// 				},
+		// 				img 					: function () {
+		// 					return this.template().content.querySelector('img');
+		// 				}
+		// 			};
+
+		// 			resolve(SetUpObject);
+
+		// 		}).then(function (SetUpObject) {
+
+		// 			var FixedObject = {
+		// 				img 					: SetUpObject.img(),
+		// 				container 				: SetUpObject.container(),
+		// 				template 				: SetUpObject.template(),
+		// 				objectURL 				: PlayListItem.objectURL,
+		// 				stage_name 				: PlayListItem.stage_name
+		// 			};
+
+		// 			return FixedObject;
+
+		// 		}).then(function (FixedObject) {
+
+		// 			FixedObject.img.src 					= FixedObject.objectURL;
+		// 			FixedObject.img.style.height 			= self.playerHeight + 'px';
+		// 			FixedObject.img.style.width 			= self.playerWidth + 'px';
+		// 			FixedObject.container.style.height 		= self.playerHeight + 'px';
+		// 			FixedObject.container.style.width 		= self.playerWidth + 'px';
+		// 			FixedObject.container.style.position 	= 'absolute';
+		// 			FixedObject.container.style.margin 		= 'inherit';
+		// 			FixedObject.container.style.left 		= '-4000px';
+		// 			FixedObject.container.setAttribute('id', FixedObject.stage_name);
+
+		// 			var clone = document.importNode(FixedObject.template.content, true);
+
+		// 			self.target.appendChild(clone);
+
+		// 			PlayListItem.DomElement					= document.querySelector('#' + FixedObject.stage_name);
+
+		// 			return PlayListItem;
+
+		// 		}).then(function (PlayListItem) {			
+
+		// 			PlayListItem.setOnStage		= function () {
+		// 				this.DomElement.style.margin 	= 'auto';
+		// 				this.DomElement.style.position 	= 'static';
+		// 			};
+
+		// 			PlayListItem.setOffStage		= function () {
+		// 				this.DomElement.style.margin 	= 'inherit';
+		// 				this.DomElement.style.position 	= 'absolute';
+		// 			};
+
+		// 			PlayListItem.play 			= function () {
+
+		// 				PlayListItemObject = this;
+
+		// 				this.setOnStage();
+						
+		// 				setTimeout(function(){
+		// 					PlayListItemObject.setOffStage();
+		// 					self.playListIndex++;
+		// 					self.playNext();									
+		// 				},parseInt(PlayListItemObject.duration) * 1000);			
+		// 			};
+
+		// 			return PlayListItem;
+
+		// 		}).then(function (PlayListItem) {
+					
+		// 			self.pubs.push(PlayListItem);
+
+		// 			return PlayListItem;
+
+		// 		})/*.then(function () {
+					
+		// 			logInspect('// + - + - + - + - + - + - + - + - + - + - + - + - ');
+
+		// 			logInspect(PlayListItem);
+
+		// 		})*/;
+
+		// 		break;
+
+		// 	case 'video/mp4':
+		// 		var template 			= document.querySelector('#video');
+		// 		var container			= template.content.querySelector('div');
+		// 		var video 				= template.content.querySelector('video');
+		// 		video.src 				= PlayListItem.objectURL;
+		// 		video.style.height 		= playerHeight + 'px';
+		// 		video.style.width 		= playerWidth + 'px';
+		// 		container.style.height 	= playerHeight + 'px';
+		// 		container.style.width 	= playerWidth + 'px';
+		// 		container.style.position 	= 'absolute';
+		// 		container.style.left 	= '-4000px';
+		// 		container.setAttribute('id', PlayListItem.name);
+		// 		var clone = document.importNode(template.content, true);
+		// 		this.target.appendChild(clone);
+		// 		break;
+		// }
+
+	};
+
+	DiscoKingPlayer.prototype.playNext = function () {
+	
+		if(this.playListIndex == this.countPlaylist()){
+			this.playListIndex = 0;
+		}
+
+		this.listPlaylist()[this.playListIndex].play();
+	
+	};
+
+
+
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////// 
 	// End
@@ -382,13 +664,17 @@
 	///////////////////////////////////////////////////////////////////////////////////////////////////////	
 
 	
-	var DiscoKingLoader = function (DiscoKingPlayerParams, CallBack) {
+	var DiscoKingLoader = function (DiscoKingPlayerParams, DiscoKingPlayer, CallBack) {
 
 		this.DiscoKingPlayerParams 		= DiscoKingPlayerParams;
+
+		this.DiscoKingPlayer 			= DiscoKingPlayer;
 
 		this.OdpXmlResponse 			= {};
 
 		this.loadCounter 				= 0;
+
+		this.item_index 				= 0;
 
 		this.DiscoKingLoaderReturns		= CallBack;
 
@@ -441,12 +727,84 @@
 
 		// 
 
-		this.PlayList = {
+		/*this.PlayList = {
 			pubs 				: [],
 			playListIndex		: 0,
-			addToPlaylist		: function (pub_object) {
-				if(!!pub_object){
-					this.pubs.push(pub_object);
+			addToPlaylist		: function (PlayListItem) {
+				if(!!PlayListItem){
+					switch(PlayListItem.content_type){
+						case 'image/jpeg':
+							var template 				= document.querySelector('#img');
+							var container				= template.content.querySelector('div');
+							var img 					= template.content.querySelector('img');
+							var stage_name				= PlayListItem.name + '-' + i.toString();
+							img.src 					= PlayListItem.objectURL;
+							img.style.height 			= playerHeight + 'px';
+							img.style.width 			= playerWidth + 'px';
+							container.style.height 		= playerHeight + 'px';
+							container.style.width 		= playerWidth + 'px';
+							container.style.position 	= 'absolute';
+							container.style.margin 		= 'inherit';
+							container.style.left 		= '-4000px';
+							container.setAttribute('id', stage_name);
+							var clone = document.importNode(template.content, true);
+							// 
+							this.target.appendChild(clone);
+							// 
+
+							// logInspect(stage_name);
+
+							// PlayListItem.DomElement		= document.querySelector('#' + PlayListItem.name + '-' + i.toString());
+
+							PlayListItem.setOnStage		= function () {
+								// logInspect(this);
+								// this.DomElement.style.margin 	= 'auto';
+								// this.DomElement.style.position 	= 'static';
+							};
+
+							PlayListItem.setOffStage		= function () {
+								// this.DomElement.style.margin 	= 'inherit';
+								// this.DomElement.style.position 	= 'absolute';
+							};
+
+							PlayListItem.play 			= function () {
+
+								logInspect(i);
+
+								var CurrentItem = this;
+
+								CurrentItem.DomElement = document.querySelector('#' + CurrentItem.name + '-' + i.toString());
+
+								// logInspect(CurrentItem.DomElement);
+
+								CurrentItem.setOnStage();
+								
+								setTimeout(function(){
+									CurrentItem.setOffStage();
+									self.playListIndex++;
+									self.playNext();									
+								},parseInt(CurrentItem.duration) * 1000);
+
+							};
+							break;
+
+						case 'video/mp4':
+							// var template 			= document.querySelector('#video');
+							// var container			= template.content.querySelector('div');
+							// var video 				= template.content.querySelector('video');
+							// video.src 				= PlayListItem.objectURL;
+							// video.style.height 		= playerHeight + 'px';
+							// video.style.width 		= playerWidth + 'px';
+							// container.style.height 	= playerHeight + 'px';
+							// container.style.width 	= playerWidth + 'px';
+							// container.style.position 	= 'absolute';
+							// container.style.left 	= '-4000px';
+							// container.setAttribute('id', PlayListItem.name);
+							// var clone = document.importNode(template.content, true);
+							// this.target.appendChild(clone);
+							break;
+					}
+					this.pubs.push(PlayListItem);
 				}				
 			},
 			listPlaylist		: function () {
@@ -456,7 +814,7 @@
 				return this.pubs.length;
 			},
 			toTarget			: function (CallBack) {
-
+				
 				var self = this;
 
 				var return_value = false;
@@ -511,14 +869,14 @@
 								// PlayListItem.DomElement		= document.querySelector('#' + PlayListItem.name + '-' + i.toString());
 
 								PlayListItem.setOnStage		= function () {
-									logInspect(this);
-									/*this.DomElement.style.margin 	= 'auto';
-									this.DomElement.style.position 	= 'static';*/
+									// logInspect(this);
+									// this.DomElement.style.margin 	= 'auto';
+									// this.DomElement.style.position 	= 'static';
 								};
 
 								PlayListItem.setOffStage		= function () {
-									/*this.DomElement.style.margin 	= 'inherit';
-									this.DomElement.style.position 	= 'absolute';*/
+									// this.DomElement.style.margin 	= 'inherit';
+									// this.DomElement.style.position 	= 'absolute';
 								};
 
 								PlayListItem.play 			= function () {
@@ -571,7 +929,7 @@
 				this.listPlaylist()[this.playListIndex].play();
 
 			}
-		};
+		};*/
 
 	};
 
@@ -631,20 +989,58 @@
 	// buildLoop - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - + - 
 
 	DiscoKingLoader.prototype.buildLoop = function () {
+
 		var self = this;
+
 		try{
+
 			var primitive_pub_item = self.PrimitivePubArray.listPrimitivePubs()[self.loadCounter];
+
 			self.getMediaItem(primitive_pub_item, function (pub_item_with_media) {
-				self.PlayList.addToPlaylist(pub_item_with_media);
+
+				// 
+				if(!!pub_item_with_media){
+
+					var stage_name = pub_item_with_media.name + '-' + self.item_index;
+
+					var NewLoopItem = {
+						index 				: self.item_index,
+						stage_name 			: stage_name,
+						content_type 		: pub_item_with_media.content_type,
+						duration 			: pub_item_with_media.duration,
+						id 					: pub_item_with_media.id,
+						init 				: pub_item_with_media.init,
+						log_diffusion 		: pub_item_with_media.log_diffusion,
+						name 				: pub_item_with_media.name,
+						objectURL 			: pub_item_with_media.objectURL,
+						reseau 				: pub_item_with_media.reseau,
+						url 				: pub_item_with_media.url
+					};
+
+					//
+
+					self.DiscoKingPlayer.addToPlaylist(NewLoopItem);
+
+					self.item_index++;
+
+				}				
+
 				self.loadCounter++;
+
 				if(self.loadCounter < self.PrimitivePubArray.countPrimitivePubs()){
+
 					self.buildLoop();
+
 				}else{
-					return self.DiscoKingLoaderReturns(self.PlayList);
+					return self.DiscoKingLoaderReturns(self.DiscoKingPlayer);
 				}
+				
 			});
+
 		}catch(err){
+
 			logError("buildLoop", err.message);
+
 			// TODO : Action in case of problem
 		}
 	};
@@ -713,11 +1109,13 @@
 
 	var DiscoKing = function (DiscoKingPlayerParams) {
 
-		// this.DiscoKingLoader = new DiscoKingLoader(DiscoKingPlayerParams).loadLoop();
+		this.DiscoKingPlayer = new DiscoKingPlayer(DiscoKingPlayerParams);
 
-		this.DiscoKingPlayer = new DiscoKingLoader(DiscoKingPlayerParams, function (PlayList) {
+		this.DiscoKingLoader = new DiscoKingLoader(DiscoKingPlayerParams, this.DiscoKingPlayer, function (DiscoKingPlayer) {
 
-			return new Promise(function (resolve, reject) {
+			// logInspect(DiscoKingPlayer);
+
+			/*return new Promise(function (resolve, reject) {
 				var result = false;
 				PlayList.toTarget(function (success) {
 					result = success;
@@ -726,7 +1124,9 @@
 			}).then(function (success) {
 				logInspect(PlayList.listPlaylist());
 				PlayList.playNext();
-			});
+			});*/
+
+			DiscoKingPlayer.playNext();
 
 		}).loadLoop();
 
